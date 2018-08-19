@@ -15,52 +15,53 @@
  */
 package com.example.android.quakereport;
 
+import android.app.LoaderManager;
 import android.content.Intent;
+import android.content.Loader;
+import android.app.LoaderManager.LoaderCallbacks;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import java.util.ArrayList;
+import java.util.List;
 
 
-public class EarthquakeActivity extends AppCompatActivity {
+public class EarthquakeActivity extends AppCompatActivity implements LoaderCallbacks<List<Earthquake>> {
 
-    public static final String LOG_TAG = EarthquakeActivity.class.getName();
+    public static final String TAG = EarthquakeActivity.class.getName();
+    private static final String SAMPLE_JSON_RESPONSE = "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&eventtype=earthquake&orderby=time&minmag=4&limit=50";
+    private static final int EARTHQUAKE_LOADER_ID = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.earthquake_activity);
-        String SAMPLE_JSON_RESPONSE = "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&eventtype=earthquake&orderby=time&minmag=1&limit=30";
-
-
-        // Create a fake list of earthquake locations.
-        EarthQuakeAsync earthQuakeAsync = new EarthQuakeAsync();
-        earthQuakeAsync.execute(SAMPLE_JSON_RESPONSE);
+        LoaderManager loaderManager = getLoaderManager();
+        Log.d(TAG, "onCreate: Executes initLoader");
+        loaderManager.initLoader(EARTHQUAKE_LOADER_ID,null,this);
     }
-    private class EarthQuakeAsync extends AsyncTask<String,Void,ArrayList<Earthquake>> {
-        @Override
-        protected ArrayList<Earthquake> doInBackground(String... urls) {
 
-            if(urls.length < 1 || urls[0] == null){
-                return null;
-            }
-            return QueryUtils.fetchEarthquakeData(urls[0]);
-        }
+    @Override
+    public Loader<List<Earthquake>> onCreateLoader(int id, Bundle args) {
+        Log.d(TAG, "onCreateLoader: executes create loader");
+        return new EarthquakeLoader(this,SAMPLE_JSON_RESPONSE);
+    }
 
-        @Override
-        protected void onPostExecute(ArrayList<Earthquake> event) {
+    @Override
+    public void onLoadFinished(Loader<List<Earthquake>> loader, List<Earthquake> data) {
+        Log.d(TAG, "onLoadFinished: executes load finished");
+        updateUi((ArrayList<Earthquake>) data);
+    }
 
-            if(event == null){
-                return;
-            }
-            updateUi(event);
-        }
+    @Override
+    public void onLoaderReset(Loader<List<Earthquake>> loader) {
+        Log.d(TAG, "onLoaderReset: ");
+        updateUi(new ArrayList<Earthquake>());
     }
 
     private void updateUi(final ArrayList<Earthquake> earthquakes){
