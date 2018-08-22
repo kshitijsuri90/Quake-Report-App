@@ -41,9 +41,12 @@ public final class QueryUtils {
         String jsonResponse = null
                 ;
         try {
+            Thread.sleep(1000);
             jsonResponse = makeHTTPRequest(url);
         } catch (IOException e) {
             Log.e(TAG, "Error closing input stream", e);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
 
         // Extract relevant fields from the JSON response and create an {@link Event} object
